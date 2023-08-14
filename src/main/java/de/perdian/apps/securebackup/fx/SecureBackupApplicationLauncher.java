@@ -1,9 +1,11 @@
 package de.perdian.apps.securebackup.fx;
 
+import javafx.application.Application;
+
 public class SecureBackupApplicationLauncher {
 
     public static void main(String[] args) {
-        throw new UnsupportedOperationException();
+        Application.launch(SecureBackupApplication.class);
     }
 
 }
