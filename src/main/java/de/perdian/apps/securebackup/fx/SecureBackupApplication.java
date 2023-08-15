@@ -1,5 +1,6 @@
 package de.perdian.apps.securebackup.fx;
 
+import de.perdian.apps.securebackup.fx.model.ArchiverModel;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -11,12 +12,12 @@ public class SecureBackupApplication extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(SecureBackupApplication.class);
 
-    private SecureBackupModel model = null;
+    private ArchiverModel model = null;
 
     @Override
     public void init() throws Exception {
         log.debug("Loading last used model");
-        SecureBackupModel model = new SecureBackupModel();
+        ArchiverModel model = new ArchiverModel();
         this.setModel(model);
     }
 
@@ -37,10 +38,10 @@ public class SecureBackupApplication extends Application {
 
     }
 
-    private SecureBackupModel getModel() {
+    private ArchiverModel getModel() {
         return this.model;
     }
-    private void setModel(SecureBackupModel model) {
+    private void setModel(ArchiverModel model) {
         this.model = model;
     }
 
