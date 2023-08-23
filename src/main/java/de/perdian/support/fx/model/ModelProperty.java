@@ -1,53 +1,64 @@
 package de.perdian.support.fx.model;
 
-import javafx.beans.property.Property;
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import java.lang.reflect.Field;
+import java.util.function.Function;
 
-interface ModelProperty {
+class ModelProperty {
 
-    void addChangeListener(Object propertyValue, ChangeListener<Object> changeListener);
+    private String path = null;
+    private Field propertValueField = null;
+    private Function<Object, Object> modelToPropertyValueParentFunction = null;
+    private ModelPropertyHandler handler = null;
 
-    class PropertyModelProperty implements ModelProperty {
-
-        @Override
-        public void addChangeListener(Object propertyValue, ChangeListener<Object> changeListener) {
-            ((Property<?>)propertyValue).addListener(changeListener);
-        }
-
+    ModelProperty(String path, Field valueField, Function<Object, Object> parentToValueFunction, ModelPropertyHandler handler) {
+        this.setPath(path);
+        this.setPropertValueField(valueField);
+        this.setModelToPropertyValueParentFunction(parentToValueFunction);
+        this.setHandler(handler);
     }
 
-    class ListModelProperty implements ModelProperty {
-
-        @Override
-        public void addChangeListener(Object propertyValue, ChangeListener<Object> changeListener) {
-            ObservableList<Object> listValue = (ObservableList<Object>)propertyValue;
-            listValue.addListener((ListChangeListener.Change<? extends Object> change) -> changeListener.changed(null, propertyValue, propertyValue));
+    Object readValue(Object modelInstance) {
+        Object propertyValueParent = this.getModelToPropertyValueParentFunction().apply(modelInstance);
+        Field propertyValueField = this.getPropertValueField();
+        try {
+            propertyValueField.setAccessible(true);
+            return propertValueField.get(propertyValueParent);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Cannot access value for field '" + propertyValueField.getName() + "' in class '" + propertyValueParent.getClass().getName() + "'", e);
         }
-
     }
 
-    class ObjectModelProperty implements ModelProperty {
+    void addChangeListener(Object modelInstance, Runnable changeListener) {
+        Object propertyValue = this.readValue(modelInstance);
+        this.getHandler().addChangeListener(propertyValue, changeListener);
+    }
 
-        private ModelClassMetadata propertyClassMetadata = null;
+    String getPath() {
+        return path;
+    }
+    private void setPath(String path) {
+        this.path = path;
+    }
 
-        ObjectModelProperty(Class<?> propertyClass) {
-            this.setPropertyClassMetadata(new ModelClassMetadata(propertyClass));
-        }
+    Field getPropertValueField() {
+        return propertValueField;
+    }
+    private void setPropertValueField(Field propertValueField) {
+        this.propertValueField = propertValueField;
+    }
 
-        @Override
-        public void addChangeListener(Object propertyValue, ChangeListener<Object> changeListener) {
-            this.getPropertyClassMetadata().adChangeListenerToProperties(propertyValue, changeListener);
-        }
+    Function<Object, Object> getModelToPropertyValueParentFunction() {
+        return modelToPropertyValueParentFunction;
+    }
+    private void setModelToPropertyValueParentFunction(Function<Object, Object> modelToPropertyValueParentFunction) {
+        this.modelToPropertyValueParentFunction = modelToPropertyValueParentFunction;
+    }
 
-        private ModelClassMetadata getPropertyClassMetadata() {
-            return this.propertyClassMetadata;
-        }
-        private void setPropertyClassMetadata(ModelClassMetadata propertyClassMetadata) {
-            this.propertyClassMetadata = propertyClassMetadata;
-        }
-
+    ModelPropertyHandler getHandler() {
+        return this.handler;
+    }
+    private void setHandler(ModelPropertyHandler handler) {
+        this.handler = handler;
     }
 
 }
