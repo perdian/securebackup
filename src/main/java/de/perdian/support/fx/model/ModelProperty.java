@@ -12,14 +12,14 @@ class ModelProperty {
 
     ModelProperty(String path, Field valueField, Function<Object, Object> parentToValueFunction, ModelPropertyHandler handler) {
         this.setPath(path);
-        this.setPropertValueField(valueField);
+        this.setPropertyValueField(valueField);
         this.setModelToPropertyValueParentFunction(parentToValueFunction);
         this.setHandler(handler);
     }
 
     Object readValue(Object modelInstance) {
         Object propertyValueParent = this.getModelToPropertyValueParentFunction().apply(modelInstance);
-        Field propertyValueField = this.getPropertValueField();
+        Field propertyValueField = this.getPropertyValueField();
         try {
             propertyValueField.setAccessible(true);
             return propertValueField.get(propertyValueParent);
@@ -40,10 +40,10 @@ class ModelProperty {
         this.path = path;
     }
 
-    Field getPropertValueField() {
+    Field getPropertyValueField() {
         return propertValueField;
     }
-    private void setPropertValueField(Field propertValueField) {
+    private void setPropertyValueField(Field propertValueField) {
         this.propertValueField = propertValueField;
     }
 

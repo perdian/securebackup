@@ -35,7 +35,7 @@ public class EncryptionExample {
         try (InputStream sourceStream = encryptor.createDecryptedInputStream(password, targetFile)) {
             ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
             IOUtils.copy(sourceStream, targetStream);
-            String targetString = new String(targetStream.toByteArray(), StandardCharsets.UTF_8);
+            String targetString = targetStream.toString(StandardCharsets.UTF_8);
 
             System.err.println("Cleartext (before):     " + message.strip());
             System.err.println("Cleartext (before) HEX: " + Hex.encodeHexString(message.getBytes()));

@@ -15,6 +15,7 @@ import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.List;
@@ -22,32 +23,32 @@ import java.util.List;
 public class ModelClassAnalyzerTest {
 
     @Test
-    public void shouldCreateNewModelAndPersistChanges() {
+    public void shouldCreateNewModelAndPersistChanges() throws IOException  {
+        try (FileSystem fileSystem = Jimfs.newFileSystem()) {
+            Path modelFile = fileSystem.getPath(this.getClass().getName());
 
-        FileSystem fileSystem = Jimfs.newFileSystem();
-        Path modelFile = fileSystem.getPath(this.getClass().getName());
+            ExampleModel exampleModel = new ModelBuilder<>(ExampleModel.class).createModel(modelFile);
+            MatcherAssert.assertThat(exampleModel.getStringProperty().getValue(), IsNull.nullValue());
+            MatcherAssert.assertThat(exampleModel.getSimpleListProperty(), IsEmptyCollection.empty());
+            MatcherAssert.assertThat(exampleModel.getSubModel().getIntegerProperty().getValue(), IsEqual.equalTo(0));
 
-        ExampleModel exampleModel = new ModelBuilder<>(ExampleModel.class).createModel(modelFile);
-        MatcherAssert.assertThat(exampleModel.getStringProperty().getValue(), IsNull.nullValue());
-        MatcherAssert.assertThat(exampleModel.getSimpleListProperty(), IsEmptyCollection.empty());
-        MatcherAssert.assertThat(exampleModel.getSubModel().getIntegerProperty().getValue(), IsEqual.equalTo(0));
+            ListModel listModelA = new ListModel();
+            ListModel listModelB = new ListModel();
+            listModelB.getStringProperty().setValue("listModelB_newString");
 
-        ListModel listModelA = new ListModel();
-        ListModel listModelB = new ListModel();
-        listModelB.getStringProperty().setValue("listModelB_newString");
+            exampleModel.getSimpleListProperty().setAll(List.of("A", "B", "C"));
+            exampleModel.getStringProperty().setValue("foo");
+            exampleModel.getSubModel().getIntegerProperty().setValue(42);
+            exampleModel.getComplexListProperty().setAll(listModelA, listModelB);
 
-        exampleModel.getSimpleListProperty().setAll(List.of("A", "B", "C"));
-        exampleModel.getStringProperty().setValue("foo");
-        exampleModel.getSubModel().getIntegerProperty().setValue(42);
-        exampleModel.getComplexListProperty().setAll(listModelA, listModelB);
+            ExampleModel exampleModelReloaded = new ModelBuilder<>(ExampleModel.class).createModel(modelFile);
+            MatcherAssert.assertThat(exampleModelReloaded.getSimpleListProperty(), IsIterableContainingInOrder.contains("A", "B", "C"));
+            MatcherAssert.assertThat(exampleModelReloaded.getStringProperty().getValue(), IsEqual.equalTo("foo"));
+            MatcherAssert.assertThat(exampleModelReloaded.getSubModel().getIntegerProperty().getValue(), IsEqual.equalTo(42));
+            MatcherAssert.assertThat(exampleModelReloaded.getComplexListProperty(), IsCollectionWithSize.hasSize(2));
+            MatcherAssert.assertThat(exampleModelReloaded.getComplexListProperty().get(1).getStringProperty().getValue(), IsEqual.equalTo("listModelB_newString"));
 
-        ExampleModel exampleModelReloaded = new ModelBuilder<>(ExampleModel.class).createModel(modelFile);
-        MatcherAssert.assertThat(exampleModelReloaded.getSimpleListProperty(), IsIterableContainingInOrder.contains("A", "B", "C"));
-        MatcherAssert.assertThat(exampleModelReloaded.getStringProperty().getValue(), IsEqual.equalTo("foo"));
-        MatcherAssert.assertThat(exampleModelReloaded.getSubModel().getIntegerProperty().getValue(), IsEqual.equalTo(42));
-        MatcherAssert.assertThat(exampleModelReloaded.getComplexListProperty(), IsCollectionWithSize.hasSize(2));
-        MatcherAssert.assertThat(exampleModelReloaded.getComplexListProperty().get(1).getStringProperty().getValue(), IsEqual.equalTo("listModelB_newString"));
-
+        }
     }
 
     static class ExampleModel {

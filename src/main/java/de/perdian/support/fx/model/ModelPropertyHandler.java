@@ -4,6 +4,7 @@ import javafx.beans.property.Property;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,22 +45,17 @@ interface ModelPropertyHandler {
             propertyValueList.forEach(listItem -> this.addChangeListenerToListItem(listItem, changeListener));
             propertyValueList.addListener((ListChangeListener.Change<?> change) -> {
                 while (change.next()) {
-                    change.getRemoved().forEach(removedListItem -> this.removeChangeListenerFromListItem(removedListItem, changeListener));
                     change.getAddedSubList().forEach(removedListItem -> this.addChangeListenerToListItem(removedListItem, changeListener));
                 }
                 changeListener.run();
             });
         }
 
-        @SuppressWarnings("unchecked")
         private void addChangeListenerToListItem(Object listItem, Runnable changeListener) {
             if (listItem != null) {
-                ModelBuilder<?> listItemModelBuilder = new ModelBuilder(listItem.getClass());
+                ModelBuilder<?> listItemModelBuilder = new ModelBuilder<>(listItem.getClass());
                 listItemModelBuilder.getProperties().forEach(listItemProperty -> listItemProperty.addChangeListener(listItem, changeListener));
             }
-        }
-
-        private void removeChangeListenerFromListItem(Object listItem, Runnable changeListener) {
         }
 
         @SuppressWarnings("unchecked")
@@ -133,7 +129,8 @@ interface ModelPropertyHandler {
 
         static class ComplexListPropertyStorageWrapper implements ListPropertyStorageWrapper {
 
-            static final long serialVersionUID = 1L;
+            @Serial
+            private static final long serialVersionUID = 1L;
 
             private Class<?> itemClass = null;
             private Map<String, Object> itemStorageValues = null;

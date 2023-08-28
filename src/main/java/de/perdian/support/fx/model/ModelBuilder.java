@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -26,10 +27,16 @@ public class ModelBuilder<T> {
     private static final Logger log = LoggerFactory.getLogger(ModelBuilder.class);
 
     private Class<T> type = null;
+    private Supplier<? extends T> initialModelSupplier = null;
     private List<ModelProperty> properties = null;
 
     public ModelBuilder(Class<T> type) {
+        this(type, new InitialModelFromDefaultClassConstructorSupplier<>(type));
+    }
+
+    public ModelBuilder(Class<T> type, Supplier<? extends T> initialModelSupplier) {
         this.setType(type);
+        this.setInitialModelSupplier(initialModelSupplier);
         this.setProperties(new ArrayList<>());
         this.appendProperties(type, root -> root,"");
     }
@@ -62,21 +69,11 @@ public class ModelBuilder<T> {
         }
     }
 
-    T createModel(Path modelFile) {
-        T modelInstance = this.createModelInstance();
+    public T createModel(Path modelFile) {
+        T modelInstance = this.getInitialModelSupplier().get();
         this.populateModelFromFile(modelInstance, modelFile);
         this.getProperties().forEach(property -> property.addChangeListener(modelInstance, () -> this.saveModelToFile(modelInstance, modelFile)));
         return modelInstance;
-    }
-
-    private T createModelInstance() {
-        try {
-            Constructor<T> modelConstructor = this.getType().getDeclaredConstructor();
-            modelConstructor.setAccessible(true);
-            return modelConstructor.newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalArgumentException("Cannot create model class: " + this.getType(), e);
-        }
     }
 
     void populateModelFromStorageModel(T modelInstance, Map<String, Object> storageValues) {
@@ -119,11 +116,45 @@ public class ModelBuilder<T> {
         return storageValues;
     }
 
+    private static class InitialModelFromDefaultClassConstructorSupplier<T> implements Supplier<T> {
+
+        private Class<T> type = null;
+
+        private InitialModelFromDefaultClassConstructorSupplier(Class<T> type) {
+            this.setType(type);
+        }
+
+        public T get() {
+            try {
+                Constructor<T> modelConstructor = this.getType().getDeclaredConstructor();
+                modelConstructor.setAccessible(true);
+                return modelConstructor.newInstance();
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalArgumentException("Cannot create model class: " + this.getType(), e);
+            }
+        }
+
+        private Class<T> getType() {
+            return this.type;
+        }
+        private void setType(Class<T> type) {
+            this.type = type;
+        }
+
+    }
+
     public Class<T> getType() {
         return this.type;
     }
     private void setType(Class<T> type) {
         this.type = type;
+    }
+
+    private Supplier<? extends T> getInitialModelSupplier() {
+        return this.initialModelSupplier;
+    }
+    private void setInitialModelSupplier(Supplier<? extends T> initialModelSupplier) {
+        this.initialModelSupplier = initialModelSupplier;
     }
 
     List<ModelProperty> getProperties() {
