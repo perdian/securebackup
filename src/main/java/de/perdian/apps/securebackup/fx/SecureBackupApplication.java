@@ -2,6 +2,7 @@ package de.perdian.apps.securebackup.fx;
 
 import de.perdian.apps.securebackup.fx.model.ArchiverModel;
 import de.perdian.support.fx.model.ModelBuilder;
+import de.perdian.support.fx.preferences.Preferences;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -16,19 +17,20 @@ public class SecureBackupApplication extends Application {
     private static final Logger log = LoggerFactory.getLogger(SecureBackupApplication.class);
 
     private ArchiverModel model = null;
+    private Preferences preferences = null;
 
     @Override
     public void init() {
-        log.debug("Loading last used model");
-        Path archiverModelFile = Path.of(System.getProperty("user.name"), ".securebackup/" + ArchiverModel.class.getSimpleName() + ".object");
-        this.setModel(new ModelBuilder<>(ArchiverModel.class).createModel(archiverModelFile));
+        Path storageDirectory = Path.of(System.getProperty("user.home"), ".securebackup/");
+        log.debug("Loading model and preferences from storage directory: {}", storageDirectory);
+        this.setModel(new ModelBuilder<>(ArchiverModel.class).createModel(storageDirectory.resolve(ArchiverModel.class.getSimpleName() + ".object")));
+        this.setPreferences(new Preferences(storageDirectory.resolve("preferences")));
     }
 
     @Override
-    @SuppressWarnings("DataFlowIssue")
     public void start(Stage primaryStage) {
 
-        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getModel());
+        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getModel(), this.getPreferences());
         Scene applicationScene = new Scene(applicationPane, 1400, 1100);
 
         primaryStage.setTitle("SecureBackup by perdian");
@@ -46,6 +48,13 @@ public class SecureBackupApplication extends Application {
     }
     private void setModel(ArchiverModel model) {
         this.model = model;
+    }
+
+    private Preferences getPreferences() {
+        return this.preferences;
+    }
+    private void setPreferences(Preferences preferences) {
+        this.preferences = preferences;
     }
 
 }

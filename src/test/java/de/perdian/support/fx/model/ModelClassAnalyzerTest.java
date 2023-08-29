@@ -25,7 +25,7 @@ public class ModelClassAnalyzerTest {
     @Test
     public void shouldCreateNewModelAndPersistChanges() throws IOException  {
         try (FileSystem fileSystem = Jimfs.newFileSystem()) {
-            Path modelFile = fileSystem.getPath(this.getClass().getName());
+            Path modelFile = fileSystem.getPath("model");
 
             ExampleModel exampleModel = new ModelBuilder<>(ExampleModel.class).createModel(modelFile);
             MatcherAssert.assertThat(exampleModel.getStringProperty().getValue(), IsNull.nullValue());
