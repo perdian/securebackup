@@ -1,6 +1,6 @@
 package de.perdian.securebackup.examples;
 
-import de.perdian.apps.securebackup.model.impl.OpenSslEncryptor;
+import de.perdian.apps.securebackup.modules.encryptor.impl.OpenSslEncryptor;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 

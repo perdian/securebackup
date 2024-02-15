@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.model;
+package de.perdian.apps.securebackup.modules.sources;
 
 import java.nio.file.Path;
 

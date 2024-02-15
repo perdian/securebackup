@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.model;
+package de.perdian.apps.securebackup.modules.sources;
 
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;

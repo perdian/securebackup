@@ -1,5 +1,6 @@
 package de.perdian.apps.securebackup.modules.preferences;
 
+import de.perdian.apps.securebackup.support.fx.converters.PathStringConverter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -31,15 +32,7 @@ public class Preferences {
     }
 
     public ObjectProperty<Path> resolvePathProperty(String propertyName, Path initialValue) {
-        return this.resolveObjectProperty(propertyName, initialValue == null ? null : initialValue, new StringConverter<Path>() {
-            @Override public String toString(Path object) {
-                return object == null ? null : object.toString();
-            }
-            @Override
-            public Path fromString(String string) {
-                return string == null ? null : Path.of(string);
-            }
-        });
+        return this.resolveObjectProperty(propertyName, initialValue == null ? null : initialValue, new PathStringConverter());
     }
 
     public <T extends Enum<T>> ObjectProperty<T> resolveEnumProperty(String propertyName, T initialValue, Class<T> enumClass) {

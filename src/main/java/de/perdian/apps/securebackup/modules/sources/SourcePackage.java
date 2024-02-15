@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.model;
+package de.perdian.apps.securebackup.modules.sources;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;

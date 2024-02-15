@@ -1,6 +1,6 @@
 package de.perdian.apps.securebackup;
 
-import de.perdian.apps.securebackup.model.BackupSettings;
+import de.perdian.apps.securebackup.modules.collector.CollectorSettings;
 import de.perdian.apps.securebackup.modules.preferences.Preferences;
 import de.perdian.apps.securebackup.modules.preferences.PreferencesStorageDelegate;
 import de.perdian.apps.securebackup.modules.preferences.impl.MacOSKeychainStorageDelegate;
@@ -17,27 +17,25 @@ public class SecureBackupApplication extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(SecureBackupApplication.class);
 
-    private BackupSettings backupSettings = null;
-    private Preferences preferences = null;
+    private CollectorSettings collectorSettings = null;
 
     @Override
     public void init() throws Exception {
 
         Path storageDirectory = Path.of(System.getProperty("user.home"), ".securebackup/");
-        log.debug("Loading model and preferences from storage directory: {}", storageDirectory);
+        log.debug("Using application storage directory: {}", storageDirectory);
 
         PreferencesStorageDelegate preferencesStorageDelegate = new MacOSKeychainStorageDelegate();
         Preferences preferences = new Preferences(preferencesStorageDelegate);
-        BackupSettings backupSettings = new BackupSettings(preferences);
-        this.setBackupSettings(backupSettings);
-        this.setPreferences(preferences);
+
+        this.setCollectorSettings(new CollectorSettings(preferences));
 
     }
 
     @Override
     public void start(Stage primaryStage) {
 
-        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getBackupSettings(), this.getPreferences());
+        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getCollectorSettings());
         Scene applicationScene = new Scene(applicationPane, 1400, 1100);
 
         primaryStage.setTitle("SecureBackup by perdian");
@@ -50,18 +48,11 @@ public class SecureBackupApplication extends Application {
 
     }
 
-    private BackupSettings getBackupSettings() {
-        return this.backupSettings;
+    private CollectorSettings getCollectorSettings() {
+        return this.collectorSettings;
     }
-    private void setBackupSettings(BackupSettings backupSettings) {
-        this.backupSettings = backupSettings;
-    }
-
-    private Preferences getPreferences() {
-        return this.preferences;
-    }
-    private void setPreferences(Preferences preferences) {
-        this.preferences = preferences;
+    private void setCollectorSettings(CollectorSettings collectorSettings) {
+        this.collectorSettings = collectorSettings;
     }
 
 }
