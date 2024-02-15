@@ -4,6 +4,7 @@ import de.perdian.apps.securebackup.modules.collector.CollectorSettings;
 import de.perdian.apps.securebackup.modules.preferences.Preferences;
 import de.perdian.apps.securebackup.modules.preferences.PreferencesStorageDelegate;
 import de.perdian.apps.securebackup.modules.preferences.impl.MacOSKeychainStorageDelegate;
+import de.perdian.apps.securebackup.modules.sources.SourceCollection;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -18,6 +19,7 @@ public class SecureBackupApplication extends Application {
     private static final Logger log = LoggerFactory.getLogger(SecureBackupApplication.class);
 
     private CollectorSettings collectorSettings = null;
+    private SourceCollection sourceCollection = null;
 
     @Override
     public void init() throws Exception {
@@ -29,13 +31,14 @@ public class SecureBackupApplication extends Application {
         Preferences preferences = new Preferences(preferencesStorageDelegate);
 
         this.setCollectorSettings(new CollectorSettings(preferences));
+        this.setSourceCollection(new SourceCollection(preferences));
 
     }
 
     @Override
     public void start(Stage primaryStage) {
 
-        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getCollectorSettings());
+        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getCollectorSettings(), this.getSourceCollection());
         Scene applicationScene = new Scene(applicationPane, 1400, 1100);
 
         primaryStage.setTitle("SecureBackup by perdian");
@@ -53,6 +56,13 @@ public class SecureBackupApplication extends Application {
     }
     private void setCollectorSettings(CollectorSettings collectorSettings) {
         this.collectorSettings = collectorSettings;
+    }
+
+    private SourceCollection getSourceCollection() {
+        return this.sourceCollection;
+    }
+    private void setSourceCollection(SourceCollection sourceCollection) {
+        this.sourceCollection = sourceCollection;
     }
 
 }

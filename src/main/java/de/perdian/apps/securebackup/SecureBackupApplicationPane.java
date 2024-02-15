@@ -4,7 +4,8 @@ import de.perdian.apps.securebackup.modules.collector.CollectorActionsPane;
 import de.perdian.apps.securebackup.modules.collector.CollectorLogPane;
 import de.perdian.apps.securebackup.modules.collector.CollectorSettings;
 import de.perdian.apps.securebackup.modules.collector.CollectorSettingsPane;
-import de.perdian.apps.securebackup.modules.sources.SourcesPane;
+import de.perdian.apps.securebackup.modules.sources.SourceCollection;
+import de.perdian.apps.securebackup.modules.sources.SourceCollectionPane;
 import javafx.geometry.Insets;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.GridPane;
@@ -17,11 +18,11 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignP;
 
 class SecureBackupApplicationPane extends GridPane {
 
-    SecureBackupApplicationPane(CollectorSettings collectorSettings) {
+    SecureBackupApplicationPane(CollectorSettings collectorSettings, SourceCollection sourcesSettings) {
 
         CollectorSettingsPane collectorSettingsPane = new CollectorSettingsPane(collectorSettings);
         collectorSettingsPane.setPadding(new Insets(10, 10, 10, 10));
-        TitledPane collectorSettingsTitledPane = new TitledPane("Settings", collectorSettingsPane);
+        TitledPane collectorSettingsTitledPane = new TitledPane("Collector", collectorSettingsPane);
         collectorSettingsTitledPane.setGraphic(new FontIcon(MaterialDesignA.APPLICATION_SETTINGS));
         collectorSettingsTitledPane.setCollapsible(false);
         collectorSettingsTitledPane.setMaxWidth(Double.MAX_VALUE);
@@ -38,15 +39,15 @@ class SecureBackupApplicationPane extends GridPane {
         collectorActionsTitledPane.setMaxHeight(Double.MAX_VALUE);
         GridPane.setFillHeight(collectorActionsTitledPane, true);
 
-        SourcesPane sourcesPane = new SourcesPane();
-        sourcesPane.setPadding(new Insets(10, 10, 10, 10));
-        TitledPane sourcesTitledPane = new TitledPane("Sources", sourcesPane);
-        sourcesTitledPane.setGraphic(new FontIcon(MaterialDesignF.FOLDER_SETTINGS_OUTLINE));
-        sourcesTitledPane.setCollapsible(false);
-        sourcesTitledPane.setMaxWidth(Double.MAX_VALUE);
-        sourcesTitledPane.setMaxHeight(Double.MAX_VALUE);
-        GridPane.setHgrow(sourcesTitledPane, Priority.ALWAYS);
-        GridPane.setVgrow(sourcesTitledPane, Priority.ALWAYS);
+        SourceCollectionPane sourcesSettingsPane = new SourceCollectionPane(sourcesSettings);
+        sourcesSettingsPane.setPadding(new Insets(10, 10, 10, 10));
+        TitledPane sourcesSettingsTitledPane = new TitledPane("Sources", sourcesSettingsPane);
+        sourcesSettingsTitledPane.setGraphic(new FontIcon(MaterialDesignF.FOLDER_SETTINGS_OUTLINE));
+        sourcesSettingsTitledPane.setCollapsible(false);
+        sourcesSettingsTitledPane.setMaxWidth(Double.MAX_VALUE);
+        sourcesSettingsTitledPane.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setHgrow(sourcesSettingsTitledPane, Priority.ALWAYS);
+        GridPane.setVgrow(sourcesSettingsTitledPane, Priority.ALWAYS);
 
         CollectorLogPane collectorLogPane = new CollectorLogPane();
         collectorLogPane.setPadding(new Insets(10, 10, 10, 10));
@@ -60,7 +61,7 @@ class SecureBackupApplicationPane extends GridPane {
 
         this.add(collectorSettingsTitledPane, 0, 0, 1, 1);
         this.add(collectorActionsTitledPane, 1, 0, 1, 1);
-        this.add(sourcesTitledPane, 0, 1, 1, 1);
+        this.add(sourcesSettingsTitledPane, 0, 1, 1, 1);
         this.add(collectorLogTitledPane, 1, 1, 1, 1);
         this.setPadding(new Insets(10, 10, 10, 10));
         this.setHgap(10);

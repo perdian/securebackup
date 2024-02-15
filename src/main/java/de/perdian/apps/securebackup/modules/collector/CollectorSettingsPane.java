@@ -2,6 +2,7 @@ package de.perdian.apps.securebackup.modules.collector;
 
 import de.perdian.apps.securebackup.modules.encryptor.EncryptorType;
 import de.perdian.apps.securebackup.support.fx.actions.SelectDirectoryIntoPropertyActionEventHandler;
+import de.perdian.apps.securebackup.support.fx.bindings.PathBindings;
 import de.perdian.apps.securebackup.support.fx.converters.PathStringConverter;
 import de.perdian.apps.securebackup.support.fx.decoration.TextFieldDecorator;
 import javafx.collections.FXCollections;
@@ -22,7 +23,7 @@ public class CollectorSettingsPane extends GridPane {
         targetDirectoryFormatter.valueProperty().bindBidirectional(collectorSettings.targetDirectoryProperty());
         TextField targetDirectoryField = new TextField();
         targetDirectoryField.setTextFormatter(targetDirectoryFormatter);
-        TextFieldDecorator.bindErrorBackground(targetDirectoryField, collectorSettings.targetDirectoryExistsProperty());
+        TextFieldDecorator.bindErrorBackground(targetDirectoryField, PathBindings.exists(collectorSettings.targetDirectoryProperty()));
         GridPane.setHgrow(targetDirectoryField, Priority.ALWAYS);
         Button targetDirectorySelectButton = new Button(null, new FontIcon(MaterialDesignF.FOLDER));
         targetDirectorySelectButton.setOnAction(new SelectDirectoryIntoPropertyActionEventHandler(collectorSettings.targetDirectoryProperty()));

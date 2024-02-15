@@ -14,7 +14,6 @@ import java.nio.file.Path;
 public class CollectorSettings {
 
     private ObjectProperty<Path> targetDirectory = null;
-    private ObservableBooleanValue targetDirectoryExists = null;
     private StringProperty password = null;
     private StringProperty passwordConfirmation = null;
     private ObservableBooleanValue passwordsMatch = null;
@@ -23,20 +22,15 @@ public class CollectorSettings {
 
     public CollectorSettings(Preferences preferences) {
         this.targetDirectory = preferences.resolvePathProperty("targetDirectory", null);
-        this.targetDirectoryExists = PathBindings.exists(this.targetDirectory);
         this.password = preferences.resolveStringProperty("password", null);
         this.passwordConfirmation = new SimpleStringProperty();
         this.passwordsMatch = this.password.isEqualTo(this.passwordConfirmation);
         this.encryptorType = preferences.resolveEnumProperty("encryptorType", EncryptorType.OPENSSL, EncryptorType.class);
-        this.valid = Bindings.and(this.targetDirectoryExistsProperty(), this.encryptorType.isNotNull()).and(this.password.isNotEmpty()).and(this.passwordsMatch);
+        this.valid = Bindings.and(PathBindings.exists(this.targetDirectory), this.encryptorType.isNotNull()).and(this.password.isNotEmpty()).and(this.passwordsMatch);
     }
 
     public ObjectProperty<Path> targetDirectoryProperty() {
         return this.targetDirectory;
-    }
-
-    public ObservableBooleanValue targetDirectoryExistsProperty() {
-        return this.targetDirectoryExists;
     }
 
     public StringProperty passwordProperty() {
