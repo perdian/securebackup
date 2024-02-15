@@ -1,11 +1,11 @@
-package de.perdian.apps.securebackup.modules.encryption;
+package de.perdian.apps.securebackup.model;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
-public interface Encryptor {
+public interface BackupEncryptor {
 
     OutputStream createEncryptedOutputStream(String password, Path targetFile) throws IOException;
 

@@ -1,8 +1,9 @@
-package de.perdian.apps.securebackup.fx;
+package de.perdian.apps.securebackup;
 
-import de.perdian.apps.securebackup.fx.model.ArchiverModel;
-import de.perdian.support.fx.model.ModelBuilder;
-import de.perdian.support.fx.preferences.Preferences;
+import de.perdian.apps.securebackup.model.BackupSettings;
+import de.perdian.apps.securebackup.modules.preferences.Preferences;
+import de.perdian.apps.securebackup.modules.preferences.PreferencesStorageDelegate;
+import de.perdian.apps.securebackup.modules.preferences.impl.MacOSKeychainStorageDelegate;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -16,21 +17,27 @@ public class SecureBackupApplication extends Application {
 
     private static final Logger log = LoggerFactory.getLogger(SecureBackupApplication.class);
 
-    private ArchiverModel model = null;
+    private BackupSettings backupSettings = null;
     private Preferences preferences = null;
 
     @Override
-    public void init() {
+    public void init() throws Exception {
+
         Path storageDirectory = Path.of(System.getProperty("user.home"), ".securebackup/");
         log.debug("Loading model and preferences from storage directory: {}", storageDirectory);
-        this.setModel(new ModelBuilder<>(ArchiverModel.class).createModel(storageDirectory.resolve(ArchiverModel.class.getSimpleName() + ".object")));
-        this.setPreferences(new Preferences(storageDirectory.resolve("preferences")));
+
+        PreferencesStorageDelegate preferencesStorageDelegate = new MacOSKeychainStorageDelegate();
+        Preferences preferences = new Preferences(preferencesStorageDelegate);
+        BackupSettings backupSettings = new BackupSettings(preferences);
+        this.setBackupSettings(backupSettings);
+        this.setPreferences(preferences);
+
     }
 
     @Override
     public void start(Stage primaryStage) {
 
-        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getModel(), this.getPreferences());
+        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getBackupSettings(), this.getPreferences());
         Scene applicationScene = new Scene(applicationPane, 1400, 1100);
 
         primaryStage.setTitle("SecureBackup by perdian");
@@ -43,11 +50,11 @@ public class SecureBackupApplication extends Application {
 
     }
 
-    private ArchiverModel getModel() {
-        return this.model;
+    private BackupSettings getBackupSettings() {
+        return this.backupSettings;
     }
-    private void setModel(ArchiverModel model) {
-        this.model = model;
+    private void setBackupSettings(BackupSettings backupSettings) {
+        this.backupSettings = backupSettings;
     }
 
     private Preferences getPreferences() {

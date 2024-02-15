@@ -1,6 +1,6 @@
-package de.perdian.apps.securebackup.modules.encryption.impl;
+package de.perdian.apps.securebackup.model.impl;
 
-import de.perdian.apps.securebackup.modules.encryption.Encryptor;
+import de.perdian.apps.securebackup.model.BackupEncryptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ import java.util.Random;
  * $ openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:PASSWORD -in FILENAME
  */
 
-public class OpenSslEncryptor implements Encryptor {
+public class OpenSslEncryptor implements BackupEncryptor {
 
     private static final Logger log = LoggerFactory.getLogger(OpenSslEncryptor.class);
 

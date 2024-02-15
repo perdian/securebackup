@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.fx;
+package de.perdian.apps.securebackup;
 
 import javafx.application.Application;
 
