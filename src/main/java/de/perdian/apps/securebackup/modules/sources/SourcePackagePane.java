@@ -1,8 +1,10 @@
 package de.perdian.apps.securebackup.modules.sources;
 
 import de.perdian.apps.securebackup.support.fx.actions.SelectDirectoryIntoPropertyActionEventHandler;
+import de.perdian.apps.securebackup.support.fx.bindings.PathBindings;
 import de.perdian.apps.securebackup.support.fx.components.ComponentFactory;
 import de.perdian.apps.securebackup.support.fx.converters.PathStringConverter;
+import de.perdian.apps.securebackup.support.fx.decoration.TextFieldDecorator;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
@@ -22,6 +24,7 @@ class SourcePackagePane extends GridPane {
         TextFormatter<Path> rootDirectoryFormatter = new TextFormatter<>(new PathStringConverter());
         rootDirectoryFormatter.valueProperty().bindBidirectional(sourcePackage.rootDirectoryProperty());
         TextField rootDirectoryField = new TextField();
+        TextFieldDecorator.bindErrorBackground(rootDirectoryField, PathBindings.exists(sourcePackage.rootDirectoryProperty()));
         rootDirectoryField.setTextFormatter(rootDirectoryFormatter);
         Label rootDirectoryLabel = ComponentFactory.createSmallLabel("Directory");
         rootDirectoryLabel.setLabelFor(rootDirectoryField);
