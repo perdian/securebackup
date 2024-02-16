@@ -8,6 +8,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -43,9 +45,17 @@ public class SourcePackage {
         }
     }
 
-    public List<SourceFileCollection> createSourcePackages() throws IOException {
+    @Override
+    public String toString() {
+        ToStringBuilder toStringBuilder = new ToStringBuilder(this, ToStringStyle.NO_CLASS_NAME_STYLE);
+        toStringBuilder.append("rootDirectory", this.rootDirectoryProperty().getValue());
+        toStringBuilder.append("depth", this.separatePackageDepthProperty().getValue());
+        return toStringBuilder.toString();
+    }
 
-        Map<String, List<SourceFile>> filesByPackageName = new LinkedHashMap<>();
+    public List<SourceFileCollection> createSourceFileCollections() throws IOException {
+
+        Map<String, List<SourceFile>> filesByPackageName = new TreeMap<>();
         this.appendSourcePackages(filesByPackageName, this.rootDirectoryProperty().getValue(), this.rootDirectoryProperty().getValue(), this.rootNameProperty().getValue(), this.separatePackageDepthProperty().getValue() == null ? 1 : this.separatePackageDepthProperty().getValue());
 
         return filesByPackageName.entrySet().stream()
@@ -55,50 +65,54 @@ public class SourcePackage {
     }
 
     private void appendSourcePackages(Map<String, List<SourceFile>> targetFilesByPackageName, Path rootDirectory, Path parentDirectory, String packagePrefix, int remainingDepth) throws IOException {
+        if (parentDirectory != null) {
 
-        PathMatcher pathMatcher = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem());
+            PathMatcher pathMatcher = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem(), true, true);
+            PathMatcher pathMatcherExcludeOnly = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem(), false, true);
 
-        if (remainingDepth >= 1) {
+            if (remainingDepth >= 1) {
 
-            // We only traverse the first level and create a new package by it
-            List<Path> filesInDirectory = Files
-                .walk(parentDirectory, 1, FileVisitOption.FOLLOW_LINKS)
-                .filter(path -> !Objects.equals(parentDirectory, path))
-                .sorted()
-                .toList();
+                // We only traverse the first level and create a new package by it
+                List<Path> filesInDirectory = Files
+                    .walk(parentDirectory, 1, FileVisitOption.FOLLOW_LINKS)
+                    .filter(path -> !Objects.equals(parentDirectory, path))
+                    .filter(path -> pathMatcherExcludeOnly.matches(rootDirectory.relativize(path)))
+                    .sorted()
+                    .toList();
 
-            for (Path fileInDirectory : filesInDirectory) {
-                if (Files.isDirectory(fileInDirectory)) {
-                    this.appendSourcePackages(targetFilesByPackageName, rootDirectory, fileInDirectory, packagePrefix + "/" + fileInDirectory.getFileName(), remainingDepth - 1);
-                } else if (Files.isRegularFile(fileInDirectory) && pathMatcher.matches(fileInDirectory)) {
+                for (Path fileInDirectory : filesInDirectory) {
+                    if (Files.isDirectory(fileInDirectory)) {
+                        this.appendSourcePackages(targetFilesByPackageName, rootDirectory, fileInDirectory, packagePrefix + "/" + fileInDirectory.getFileName(), remainingDepth - 1);
+                    } else if (Files.isRegularFile(fileInDirectory) && pathMatcher.matches(fileInDirectory)) {
+                        targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
+                    }
+                }
+
+            } else {
+
+                // All the children can be appended directory by their path, we don't have to perform
+                // any sub package creation at all
+                List<Path> filteredFilesInDirectoryRecursively = Files
+                    .walk(parentDirectory, FileVisitOption.FOLLOW_LINKS)
+                    .filter(path -> !Objects.equals(parentDirectory, path))
+                    .filter(path -> Files.isRegularFile(path))
+                    .filter(path -> pathMatcher.matches(rootDirectory.relativize(path)))
+                    .sorted()
+                    .toList();
+
+                for (Path fileInDirectory : filteredFilesInDirectoryRecursively) {
                     targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
                 }
+
             }
 
-        } else {
-
-            // All the children can be appended directory by their path, we don't have to perform
-            // any sub package creation at all
-            List<Path> filteredFilesInDirectoryRecursively = Files
-              .walk(parentDirectory, FileVisitOption.FOLLOW_LINKS)
-              .filter(path -> !Objects.equals(parentDirectory, path))
-              .filter(path -> Files.isRegularFile(path))
-              .filter(path -> pathMatcher.matches(rootDirectory.relativize(path)))
-              .sorted()
-              .toList();
-
-              for (Path fileInDirectory : filteredFilesInDirectoryRecursively) {
-                  targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
-              }
-
         }
-
     }
 
-    private PathMatcher createConsolidatedPathMatcher(FileSystem fileSystem) {
+    private PathMatcher createConsolidatedPathMatcher(FileSystem fileSystem, boolean includeMatchers, boolean excludeMatchers) {
 
-        PathMatcher sourceIncludeMatcher = this.getIncludePatterns().isEmpty() ? file -> true : this.createConsolidatedPathMatherForPatterns(fileSystem, this.getIncludePatterns());
-        PathMatcher sourceExcludeMatcher = this.getExcludePatterns().isEmpty() ? file -> false : this.createConsolidatedPathMatherForPatterns(fileSystem, this.getExcludePatterns());
+        PathMatcher sourceIncludeMatcher = this.getIncludePatterns().isEmpty() || !includeMatchers ? file -> true : this.createConsolidatedPathMatherForPatterns(fileSystem, this.getIncludePatterns());
+        PathMatcher sourceExcludeMatcher = this.getExcludePatterns().isEmpty() || !excludeMatchers ? file -> false : this.createConsolidatedPathMatherForPatterns(fileSystem, this.getExcludePatterns());
         PathMatcher globalExcludeMatcher = this.createConsolidatedPathMatherForPatterns(fileSystem, GLOBAL_EXCLUDES);
 
         return file -> sourceIncludeMatcher.matches(file)
