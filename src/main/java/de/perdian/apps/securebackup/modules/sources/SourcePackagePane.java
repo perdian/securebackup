@@ -5,17 +5,25 @@ import de.perdian.apps.securebackup.support.fx.bindings.PathBindings;
 import de.perdian.apps.securebackup.support.fx.components.ComponentFactory;
 import de.perdian.apps.securebackup.support.fx.converters.PathStringConverter;
 import de.perdian.apps.securebackup.support.fx.decoration.TextFieldDecorator;
+import javafx.beans.property.ObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.util.StringConverter;
 import javafx.util.converter.IntegerStringConverter;
+import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignF;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 class SourcePackagePane extends GridPane {
 
@@ -53,16 +61,22 @@ class SourcePackagePane extends GridPane {
 
         ColumnConstraints includesConstraints = new ColumnConstraints();
         includesConstraints.setHgrow(Priority.ALWAYS);
+        TextFormatter<ObservableList<String>> includesFormatter = new TextFormatter<>(new PatternsStringConverter(), FXCollections.observableArrayList(sourcePackage.getIncludePatterns()));
+        SourcePackagePane.bindPatterns(includesFormatter.valueProperty(), sourcePackage.getIncludePatterns());
         TextArea includesArea = new TextArea();
+        includesArea.setTextFormatter(includesFormatter);
         includesArea.setMaxHeight(70);
         Label includesLabel = ComponentFactory.createSmallLabel("Includes");
         includesLabel.setLabelFor(includesArea);
         ColumnConstraints excludesConstraints = new ColumnConstraints();
         excludesConstraints.setHgrow(Priority.ALWAYS);
+        TextFormatter<ObservableList<String>> excludesFormatter = new TextFormatter<>(new PatternsStringConverter(), FXCollections.observableArrayList(sourcePackage.getExcludePatterns()));
+        SourcePackagePane.bindPatterns(excludesFormatter.valueProperty(), sourcePackage.getExcludePatterns());
         TextArea excludesArea = new TextArea();
+        excludesArea.setTextFormatter(excludesFormatter);
         excludesArea.setMaxHeight(70);
         Label excludesLabel = ComponentFactory.createSmallLabel("Excludes");
-        excludesLabel.setLabelFor(includesArea);
+        excludesLabel.setLabelFor(excludesArea);
 
         GridPane includesExcludesPane = new GridPane();
         includesExcludesPane.setPadding(new Insets(5, 0,0, 0));
@@ -86,6 +100,44 @@ class SourcePackagePane extends GridPane {
         this.setVgap(1);
         this.setPadding(new Insets(10, 10, 10, 10));
         this.setStyle("-fx-border-color: lightgray");
+
+    }
+
+    private static void bindPatterns(ObjectProperty<ObservableList<String>> patternsProperty, ObservableList<String> packagePatterns) {
+        patternsProperty.addListener((o, oldValue, newValue) -> {
+            if (!packagePatterns.containsAll(newValue) || !newValue.containsAll(packagePatterns)) {
+                packagePatterns.setAll(newValue);
+            }
+        });
+        packagePatterns.addListener((ListChangeListener<String>) change -> {
+            List<String> patternsValue = patternsProperty.getValue();
+            if (!packagePatterns.containsAll(patternsValue) || !patternsValue.containsAll(patternsValue)) {
+                patternsProperty.setValue(FXCollections.observableArrayList(change.getList()));
+            }
+        });
+    }
+
+    static class PatternsStringConverter extends StringConverter<ObservableList<String>> {
+
+        @Override
+        public String toString(ObservableList<String> patterns) {
+            if (patterns == null) {
+                return null;
+            } else {
+                return patterns.stream()
+                    .filter(StringUtils::isNotEmpty)
+                    .collect(Collectors.joining("\n"));
+            }
+        }
+
+        @Override
+        public ObservableList<String> fromString(String string) {
+            if (StringUtils.isEmpty(string)) {
+                return FXCollections.emptyObservableList();
+            } else {
+                return FXCollections.observableArrayList(string.lines().filter(StringUtils::isNotEmpty).toList());
+            }
+        }
 
     }
 

@@ -27,10 +27,9 @@ public class SourceCollection {
 
         ObjectProperty<Path> preferencesStorageFile = preferences.resolvePathProperty("sourcesStorageFile", null);
         this.storageFileProperty().bindBidirectional(preferencesStorageFile);
-        this.loadFromFile(preferencesStorageFile.getValue());
 
         ChangeListener<SourcePackage> packageChangeListener = (o, oldValue, newValue) -> this.saveIntoFile(this.storageFileProperty().getValue());
-        packages.addListener((ListChangeListener<SourcePackage>) change -> {
+        this.packages.addListener((ListChangeListener<SourcePackage>) change -> {
             while (change.next()) {
                 for (SourcePackage addedPackage : change.getAddedSubList()) {
                     addedPackage.addChangeListener(packageChangeListener);
@@ -40,6 +39,8 @@ public class SourceCollection {
                 }
             }
         });
+
+        this.loadFromFile(preferencesStorageFile.getValue());
 
     }
 

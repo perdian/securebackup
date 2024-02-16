@@ -21,7 +21,7 @@ public class SourcePackage {
     private final ObjectProperty<Path> rootDirectory = new SimpleObjectProperty<>();
     private final StringProperty rootName = new SimpleStringProperty();
     private final ObjectProperty<Integer> separatePackageDepth = new SimpleObjectProperty<>(2);
-    private final ObservableList<String> includePatterns = FXCollections.observableArrayList("Alfred/**", "Scrivener/**");
+    private final ObservableList<String> includePatterns = FXCollections.observableArrayList();
     private final ObservableList<String> excludePatterns = FXCollections.observableArrayList();
     private final List<ChangeListener<SourcePackage>> changeListeners = new CopyOnWriteArrayList<>();
 
@@ -140,7 +140,9 @@ public class SourcePackage {
     }
 
     private void fireChange() {
-        this.getChangeListeners().forEach(changeListener -> changeListener.changed(null, this, this));
+        this.getChangeListeners().forEach(changeListener -> {
+            changeListener.changed(null, this, this);
+        });
     }
     public void addChangeListener(ChangeListener<SourcePackage> changeListener) {
         this.getChangeListeners().add(changeListener);

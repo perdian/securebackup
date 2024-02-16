@@ -39,13 +39,13 @@ public class SecureBackupApplication extends Application {
     public void start(Stage primaryStage) {
 
         SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getCollectorSettings(), this.getSourceCollection());
-        Scene applicationScene = new Scene(applicationPane, 1400, 1100);
+        Scene applicationScene = new Scene(applicationPane, 1800, 1200);
 
         primaryStage.setTitle("SecureBackup by perdian");
         primaryStage.getIcons().add(new Image(this.getClass().getClassLoader().getResourceAsStream("icons/vault-solid.png")));
         primaryStage.setScene(applicationScene);
-        primaryStage.setMinWidth(800);
-        primaryStage.setMinHeight(600);
+        primaryStage.setMinWidth(1024);
+        primaryStage.setMinHeight(768);
         primaryStage.centerOnScreen();
         primaryStage.show();
 
