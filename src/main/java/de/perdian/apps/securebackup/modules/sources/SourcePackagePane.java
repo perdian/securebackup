@@ -9,6 +9,7 @@ class SourcePackagePane extends GridPane {
     SourcePackagePane (SourcePackage sourcePackage) {
 
         SourcePackageDefinitionPane definitionPane = new SourcePackageDefinitionPane(sourcePackage);
+        definitionPane.setPrefWidth(800);
         GridPane.setHgrow(definitionPane, Priority.ALWAYS);
         SourcePackagePreviewPane previewPane = new SourcePackagePreviewPane(sourcePackage);
         previewPane.setPrefWidth(500);

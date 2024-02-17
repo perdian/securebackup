@@ -53,11 +53,10 @@ class SecureBackupApplicationPane extends GridPane {
         collectorLogPane.setPadding(new Insets(10, 10, 10, 10));
         TitledPane collectorLogTitledPane = new TitledPane("Collector log", collectorLogPane);
         collectorLogTitledPane.setGraphic(new FontIcon(MaterialDesignC.CLIPBOARD_LIST_OUTLINE));
-        collectorLogTitledPane.setMinWidth(600);
+        collectorLogTitledPane.setPrefWidth(900);
         collectorLogTitledPane.setCollapsible(false);
-        collectorLogTitledPane.setMaxWidth(1000);
         collectorLogTitledPane.setMaxHeight(Double.MAX_VALUE);
-        GridPane.setFillHeight(collectorLogTitledPane, true);
+        GridPane.setHgrow(collectorLogTitledPane, Priority.ALWAYS);
 
         this.add(collectorSettingsTitledPane, 0, 0, 1, 1);
         this.add(collectorActionsTitledPane, 1, 0, 1, 1);
