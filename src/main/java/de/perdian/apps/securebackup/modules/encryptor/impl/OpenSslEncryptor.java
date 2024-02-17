@@ -37,6 +37,7 @@ public class OpenSslEncryptor implements Encryptor {
     private int keyIterationCount = 10000;
     private int ivSize = 16; // Bytes
     private int saltSize = 8; // Bytes
+    private Random random = new SecureRandom();
 
     @Override
     public OutputStream createEncryptedOutputStream(String password, OutputStream targetStream) throws IOException {
@@ -60,6 +61,7 @@ public class OpenSslEncryptor implements Encryptor {
 
             sourceStream.skip("Salted__".getBytes().length);
             byte[] saltBytes = sourceStream.readNBytes(this.getSaltSize());
+
             Cipher cipher = this.createCipher(Cipher.DECRYPT_MODE, password, saltBytes);
             return new CipherInputStream(sourceStream, cipher);
 
@@ -69,9 +71,8 @@ public class OpenSslEncryptor implements Encryptor {
     }
 
     byte[] createSaltBytes() {
-        Random saltRandom = new SecureRandom();
         byte[] saltBytes = new byte[8];
-        saltRandom.nextBytes(saltBytes);
+        this.getRandom().nextBytes(saltBytes);
         return saltBytes;
     }
 
@@ -142,6 +143,13 @@ public class OpenSslEncryptor implements Encryptor {
     }
     public void setSaltSize(int saltSize) {
         this.saltSize = saltSize;
+    }
+
+    public Random getRandom() {
+        return this.random;
+    }
+    public void setRandom(Random random) {
+        this.random = random;
     }
 
 }

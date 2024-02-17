@@ -62,23 +62,34 @@ public class Collector {
                 this.activeCollectionProperty().setValue(collection);
                 this.activeCollectionProgressProperty().setValue(collectionProgress);
 
-                Path rootDirectory = this.targetDirectoryProperty().getValue();
-                String collectionFileName = this.encryporProperty().getValue().createEncryptedFileName(collection.getName() + ".zip");
-                Path collectionFile = rootDirectory.resolve(collectionFileName);
-                if (!Files.exists(collectionFile.getParent())) {
-                    this.fireProgress("Creating new directory at: " + collectionFile.getParent());
-                    Files.createDirectories(collectionFile.getParent());
-                }
+                Path archiveFile = Files.createTempFile("collector", ".zip");
+                try {
 
-                try (OutputStream collectionFileStream = new BufferedOutputStream(Files.newOutputStream(collectionFile))) {
-                    try (OutputStream encryptedFileStream = this.encryporProperty().getValue().createEncryptedOutputStream(this.passwordProperty().getValue(), collectionFileStream)) {
-                        try (ZipOutputStream collectionZipStream = new ZipOutputStream(collectionFileStream)) {
-                            this.executeForCollection(collection, collectionZipStream);
-                            collectionZipStream.finish();
-                            collectionZipStream.flush();
+                    try (OutputStream archiveFileStream = new BufferedOutputStream(Files.newOutputStream(archiveFile))) {
+                        try (ZipOutputStream archiveZipStream = new ZipOutputStream(archiveFileStream)) {
+                            this.executeForCollection(collection, archiveZipStream);
+                            archiveZipStream.finish();
                         }
                     }
+
+                    Path rootDirectory = this.targetDirectoryProperty().getValue();
+                    String collectionFileName = this.encryporProperty().getValue().createEncryptedFileName(collection.getName() + ".zip");
+                    Path collectionFile = rootDirectory.resolve(collectionFileName);
+                    if (!Files.exists(collectionFile.getParent())) {
+                        this.fireProgress("Creating new directory at: " + collectionFile.getParent());
+                        Files.createDirectories(collectionFile.getParent());
+                    }
+
+                    try (OutputStream collectionStream = Files.newOutputStream(collectionFile)) {
+                        try (OutputStream encryptedOutputStream = this.encryporProperty().getValue().createEncryptedOutputStream(this.passwordProperty().getValue(), collectionStream)) {
+                            Files.copy(archiveFile, encryptedOutputStream);
+                        }
+                    }
+
+                } finally {
+                    Files.deleteIfExists(archiveFile);
                 }
+
                 this.getCompletedCollections().add(collection);
 
             }
@@ -120,6 +131,7 @@ public class Collector {
         zipOutputStream.putNextEntry(zipEntry);
 
         Files.copy(file.getFile(), zipOutputStream);
+        zipOutputStream.closeEntry();
 
     }
 

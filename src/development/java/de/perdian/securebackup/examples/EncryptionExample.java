@@ -1,51 +1,52 @@
 package de.perdian.securebackup.examples;
 
 import de.perdian.apps.securebackup.modules.encryptor.impl.OpenSslEncryptor;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Random;
 
 // https://gist.github.com/thiamteck/798343b9e4a5d7df748746d995eba53e
 // https://blog.idrsolutions.com/how-to-use-cipher-streams-in-java/
 
 public class EncryptionExample {
 
+
     public static void main(String[] args) throws Exception {
 
+        String encryptorPassword = "test";
         OpenSslEncryptor encryptor = new OpenSslEncryptor();
+        encryptor.setRandom(new Random(4711));
 
-        String message = "this is a 🤣 test\n";
-        String password = "test";
+        byte[] cleartextBytesOriginal = "this is a 🤣 test\n".getBytes();
 
-        String targetFileName = encryptor.createEncryptedFileName("example.txt");
-        Path targetDirectory = Paths.get(System.getProperty("user.home"), "Downloads/");
-        Path targetFile = targetDirectory.resolve(targetFileName);
+        ByteArrayOutputStream encryptedBytesOutputStream = new ByteArrayOutputStream();
+        try (OutputStream encryptorOutputStream = encryptor.createEncryptedOutputStream(encryptorPassword, encryptedBytesOutputStream)) {
+            encryptorOutputStream.write(cleartextBytesOriginal);
+            encryptorOutputStream.flush();
+        }
+        byte[] encryptedBytes = encryptedBytesOutputStream.toByteArray();
 
-        try (OutputStream fileStream = Files.newOutputStream(targetFile)) {
-            try (OutputStream targetStream = encryptor.createEncryptedOutputStream(password, fileStream)) {
-                targetStream.write(message.getBytes());
+        ByteArrayOutputStream reloadedBytesOutputStream = new ByteArrayOutputStream();
+        try (ByteArrayInputStream encryptedBytesStream = new ByteArrayInputStream(encryptedBytes)) {
+            try (InputStream encryptorInputStream = encryptor.createDecryptedInputStream(encryptorPassword, encryptedBytesStream)) {
+                IOUtils.copy(encryptorInputStream, reloadedBytesOutputStream);
             }
         }
+        byte[] reloadedBytes = reloadedBytesOutputStream.toByteArray();
 
-        try (InputStream fileStream = Files.newInputStream(targetFile)) {
-            try (InputStream sourceStream = encryptor.createDecryptedInputStream(password, fileStream)) {
-                ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
-                IOUtils.copy(sourceStream, targetStream);
-                String targetString = targetStream.toString(StandardCharsets.UTF_8);
+        System.out.println(""
+            + "\n- original  [" + cleartextBytesOriginal.length + "] = " // + Hex.encodeHexString(cleartextBytesOriginal)
+            + "\n- encrypted [" + encryptedBytes.length         + "] = " //+ Hex.encodeHexString(encryptedBytes)
+            + "\n- reloaded  [" + reloadedBytes.length          + "] = " //+ Hex.encodeHexString(reloadedBytes)
+        );
 
-                System.err.println("Cleartext (before):     " + message.strip());
-                System.err.println("Cleartext (before) HEX: " + Hex.encodeHexString(message.getBytes()));
-                System.err.println("Encrypted:              " + Hex.encodeHexString(Files.readAllBytes(targetFile)));
-                System.err.println("Cleartext (after):      " + targetString.strip());
-                System.err.println("Cleartext (after) HEX:  " + Hex.encodeHexString(targetString.getBytes()));
-            }
+        if (!Arrays.equals(cleartextBytesOriginal, reloadedBytes)) {
+            throw new IllegalArgumentException("Reloaded byte array doesn't equal original byte array");
         }
 
     }
