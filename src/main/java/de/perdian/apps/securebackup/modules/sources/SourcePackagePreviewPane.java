@@ -18,7 +18,6 @@ import org.kordamp.ikonli.materialdesign2.MaterialDesignR;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
@@ -91,7 +90,7 @@ class SourcePackagePreviewPane extends GridPane {
             treeView.setShowRoot(false);
             this.updateContentPane(treeView);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             this.updateContentPaneWithMessage("Cannot load preview", MaterialDesignA.ALERT);
         }
 

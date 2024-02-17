@@ -8,9 +8,9 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
@@ -39,21 +39,15 @@ public class OpenSslEncryptor implements Encryptor {
     private int saltSize = 8; // Bytes
 
     @Override
-    public OutputStream createEncryptedOutputStream(String password, Path targetFile) throws IOException {
+    public OutputStream createEncryptedOutputStream(String password, OutputStream targetStream) throws IOException {
         try {
 
             byte[] saltBytes = this.createSaltBytes();
 
-            if (!Files.exists(targetFile.getParent())) {
-                log.debug("Creating directory for encrypted target file '{}' at: {}", targetFile.getFileName(), targetFile.getParent());
-                Files.createDirectories(targetFile.getParent());
-            }
-
             Cipher targetCipher = this.createCipher(Cipher.ENCRYPT_MODE, password, saltBytes);
-            OutputStream targetFileStream = new BufferedOutputStream(Files.newOutputStream(targetFile));
-            targetFileStream.write("Salted__".getBytes());
-            targetFileStream.write(saltBytes);
-            return new CipherOutputStream(targetFileStream, targetCipher);
+            targetStream.write("Salted__".getBytes());
+            targetStream.write(saltBytes);
+            return new CipherOutputStream(targetStream, targetCipher);
 
         } catch (GeneralSecurityException e) {
             throw new IOException("Cannot initialize encryption environment", e);
@@ -61,14 +55,13 @@ public class OpenSslEncryptor implements Encryptor {
     }
 
     @Override
-    public InputStream createDecryptedInputStream(String password, Path sourceFile) throws IOException {
+    public InputStream createDecryptedInputStream(String password, InputStream sourceStream) throws IOException {
         try {
 
-            InputStream sourceFileStream = new BufferedInputStream(Files.newInputStream(sourceFile));
-            sourceFileStream.skip("Salted__".getBytes().length);
-            byte[] saltBytes = sourceFileStream.readNBytes(this.getSaltSize());
+            sourceStream.skip("Salted__".getBytes().length);
+            byte[] saltBytes = sourceStream.readNBytes(this.getSaltSize());
             Cipher cipher = this.createCipher(Cipher.DECRYPT_MODE, password, saltBytes);
-            return new CipherInputStream(sourceFileStream, cipher);
+            return new CipherInputStream(sourceStream, cipher);
 
         } catch (GeneralSecurityException e) {
             throw new IOException("Cannot initialize encryption environment", e);

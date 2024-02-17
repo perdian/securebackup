@@ -5,6 +5,7 @@ import de.perdian.apps.securebackup.support.fx.bindings.PathBindings;
 import de.perdian.apps.securebackup.support.fx.components.ComponentFactory;
 import de.perdian.apps.securebackup.support.fx.converters.PathStringConverter;
 import de.perdian.apps.securebackup.support.fx.decoration.TextFieldDecorator;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -20,6 +21,7 @@ import javafx.util.converter.IntegerStringConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignF;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignT;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -27,7 +29,7 @@ import java.util.stream.Collectors;
 
 class SourcePackageDefinitionPane extends GridPane {
 
-    SourcePackageDefinitionPane(SourcePackage sourcePackage) {
+    SourcePackageDefinitionPane(SourcePackage sourcePackage, List<SourcePackage> allPackages) {
 
         TextFormatter<Path> rootDirectoryFormatter = new TextFormatter<>(new PathStringConverter());
         rootDirectoryFormatter.valueProperty().bindBidirectional(sourcePackage.rootDirectoryProperty());
@@ -39,8 +41,10 @@ class SourcePackageDefinitionPane extends GridPane {
         HBox.setHgrow(rootDirectoryField, Priority.ALWAYS);
 
         Button rootDirectorySelectButton = new Button("Select", new FontIcon(MaterialDesignF.FOLDER));
+        Button removeButton = new Button("Remove", new FontIcon(MaterialDesignT.TRASH_CAN));
+        removeButton.setOnAction(action -> Platform.runLater(() -> allPackages.remove(sourcePackage)));
         rootDirectorySelectButton.setOnAction(new SelectDirectoryIntoPropertyActionEventHandler(sourcePackage.rootDirectoryProperty()));
-        HBox rootDirectoryPane = new HBox(2, rootDirectoryField, rootDirectorySelectButton);
+        HBox rootDirectoryPane = new HBox(2, rootDirectoryField, rootDirectorySelectButton, removeButton);
         GridPane.setHgrow(rootDirectoryPane, Priority.ALWAYS);
 
         TextFormatter<Integer> depthFormatter = new TextFormatter<>(new IntegerStringConverter());

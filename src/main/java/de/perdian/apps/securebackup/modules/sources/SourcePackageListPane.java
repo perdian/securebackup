@@ -15,7 +15,7 @@ class SourcePackageListPane extends VBox {
         Map<SourcePackage, SourcePackagePane> packagePanes = new HashMap<>();
 
         for (SourcePackage initialPackage : packages) {
-            SourcePackagePane packageBuilderPane = new SourcePackagePane(initialPackage);
+            SourcePackagePane packageBuilderPane = new SourcePackagePane(initialPackage, packages);
             packagePanes.put(initialPackage, packageBuilderPane);
             this.getChildren().add(packageBuilderPane);
         }
@@ -30,7 +30,7 @@ class SourcePackageListPane extends VBox {
                 }
                 for (SourcePackage addedPackage : change.getAddedSubList()) {
                     int newPackagePaneIndex = packages.indexOf(addedPackage);
-                    SourcePackagePane newPackagePane = new SourcePackagePane(addedPackage);
+                    SourcePackagePane newPackagePane = new SourcePackagePane(addedPackage, packages);
                     packagePanes.put(addedPackage, newPackagePane);
                     Platform.runLater(() -> this.getChildren().add(newPackagePaneIndex, newPackagePane));
                 }

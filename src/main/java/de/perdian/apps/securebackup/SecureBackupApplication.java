@@ -38,7 +38,7 @@ public class SecureBackupApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
 
-        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getCollectorSettings(), this.getSourceCollection());
+        SecureBackupApplicationPane applicationPane = new SecureBackupApplicationPane(this.getSourceCollection(), this.getCollectorSettings());
         Scene applicationScene = new Scene(applicationPane, 1800, 1200);
 
         primaryStage.setTitle("SecureBackup by perdian");

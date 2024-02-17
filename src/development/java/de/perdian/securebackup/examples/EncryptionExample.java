@@ -28,22 +28,25 @@ public class EncryptionExample {
         Path targetDirectory = Paths.get(System.getProperty("user.home"), "Downloads/");
         Path targetFile = targetDirectory.resolve(targetFileName);
 
-        try (OutputStream targetStream = encryptor.createEncryptedOutputStream(password, targetFile)) {
-            targetStream.write(message.getBytes());
+        try (OutputStream fileStream = Files.newOutputStream(targetFile)) {
+            try (OutputStream targetStream = encryptor.createEncryptedOutputStream(password, fileStream)) {
+                targetStream.write(message.getBytes());
+            }
         }
 
-        try (InputStream sourceStream = encryptor.createDecryptedInputStream(password, targetFile)) {
-            ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
-            IOUtils.copy(sourceStream, targetStream);
-            String targetString = targetStream.toString(StandardCharsets.UTF_8);
+        try (InputStream fileStream = Files.newInputStream(targetFile)) {
+            try (InputStream sourceStream = encryptor.createDecryptedInputStream(password, fileStream)) {
+                ByteArrayOutputStream targetStream = new ByteArrayOutputStream();
+                IOUtils.copy(sourceStream, targetStream);
+                String targetString = targetStream.toString(StandardCharsets.UTF_8);
 
-            System.err.println("Cleartext (before):     " + message.strip());
-            System.err.println("Cleartext (before) HEX: " + Hex.encodeHexString(message.getBytes()));
-            System.err.println("Encrypted:              " + Hex.encodeHexString(Files.readAllBytes(targetFile)));
-            System.err.println("Cleartext (after):      " + targetString.strip());
-            System.err.println("Cleartext (after) HEX:  " + Hex.encodeHexString(targetString.getBytes()));
+                System.err.println("Cleartext (before):     " + message.strip());
+                System.err.println("Cleartext (before) HEX: " + Hex.encodeHexString(message.getBytes()));
+                System.err.println("Encrypted:              " + Hex.encodeHexString(Files.readAllBytes(targetFile)));
+                System.err.println("Cleartext (after):      " + targetString.strip());
+                System.err.println("Cleartext (after) HEX:  " + Hex.encodeHexString(targetString.getBytes()));
+            }
         }
-
 
     }
 

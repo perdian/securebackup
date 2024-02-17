@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 public class SourceCollection {
 
@@ -38,10 +39,17 @@ public class SourceCollection {
                     removedPackage.removeChangeListener(packageChangeListener);
                 }
             }
+            packageChangeListener.changed(null, null, null);
         });
 
         this.loadFromFile(preferencesStorageFile.getValue());
 
+    }
+
+    public List<SourceFileCollection> createFileCollections() {
+        return this.getPackages().stream()
+            .flatMap(p -> p.createSourceFileCollections().stream())
+            .toList();
     }
 
     public void loadFromFile(Path sourceFile) {

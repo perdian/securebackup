@@ -1,12 +1,14 @@
 package de.perdian.apps.securebackup.modules.encryptor;
 
+import de.perdian.apps.securebackup.modules.encryptor.impl.NoEncryptor;
 import de.perdian.apps.securebackup.modules.encryptor.impl.OpenSslEncryptor;
 
 import java.util.function.Supplier;
 
 public enum EncryptorType {
 
-    OPENSSL(OpenSslEncryptor::new);
+    OPENSSL(OpenSslEncryptor::new),
+    NONE(NoEncryptor::new);
 
     private Supplier<Encryptor> encryptorFactory = null;
 

@@ -4,11 +4,13 @@ import javafx.geometry.Insets;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
+import java.util.List;
+
 class SourcePackagePane extends GridPane {
 
-    SourcePackagePane (SourcePackage sourcePackage) {
+    SourcePackagePane(SourcePackage sourcePackage, List<SourcePackage> allPackages) {
 
-        SourcePackageDefinitionPane definitionPane = new SourcePackageDefinitionPane(sourcePackage);
+        SourcePackageDefinitionPane definitionPane = new SourcePackageDefinitionPane(sourcePackage, allPackages);
         definitionPane.setPrefWidth(800);
         GridPane.setHgrow(definitionPane, Priority.ALWAYS);
         SourcePackagePreviewPane previewPane = new SourcePackagePreviewPane(sourcePackage);

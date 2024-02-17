@@ -53,7 +53,7 @@ public class SourcePackage {
         return toStringBuilder.toString();
     }
 
-    public List<SourceFileCollection> createSourceFileCollections() throws IOException {
+    public List<SourceFileCollection> createSourceFileCollections() {
 
         Map<String, List<SourceFile>> filesByPackageName = new TreeMap<>();
         this.appendSourcePackages(filesByPackageName, this.rootDirectoryProperty().getValue(), this.rootDirectoryProperty().getValue(), this.rootNameProperty().getValue(), this.separatePackageDepthProperty().getValue() == null ? 1 : this.separatePackageDepthProperty().getValue());
@@ -64,48 +64,52 @@ public class SourcePackage {
 
     }
 
-    private void appendSourcePackages(Map<String, List<SourceFile>> targetFilesByPackageName, Path rootDirectory, Path parentDirectory, String packagePrefix, int remainingDepth) throws IOException {
+    private void appendSourcePackages(Map<String, List<SourceFile>> targetFilesByPackageName, Path rootDirectory, Path parentDirectory, String packagePrefix, int remainingDepth) {
         if (parentDirectory != null) {
+            try {
 
-            PathMatcher pathMatcher = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem(), true, true);
-            PathMatcher pathMatcherExcludeOnly = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem(), false, true);
+                PathMatcher pathMatcher = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem(), true, true);
+                PathMatcher pathMatcherExcludeOnly = this.createConsolidatedPathMatcher(parentDirectory.getFileSystem(), false, true);
 
-            if (remainingDepth >= 1) {
+                if (remainingDepth >= 1) {
 
-                // We only traverse the first level and create a new package by it
-                List<Path> filesInDirectory = Files
-                    .walk(parentDirectory, 1, FileVisitOption.FOLLOW_LINKS)
-                    .filter(path -> !Objects.equals(parentDirectory, path))
-                    .filter(path -> pathMatcherExcludeOnly.matches(rootDirectory.relativize(path)))
-                    .sorted()
-                    .toList();
+                    // We only traverse the first level and create a new package by it
+                    List<Path> filesInDirectory = !Files.exists(parentDirectory) ? Collections.emptyList() : Files
+                        .walk(parentDirectory, 1, FileVisitOption.FOLLOW_LINKS)
+                        .filter(path -> !Objects.equals(parentDirectory, path))
+                        .filter(path -> pathMatcherExcludeOnly.matches(rootDirectory.relativize(path)))
+                        .sorted()
+                        .toList();
 
-                for (Path fileInDirectory : filesInDirectory) {
-                    if (Files.isDirectory(fileInDirectory)) {
-                        this.appendSourcePackages(targetFilesByPackageName, rootDirectory, fileInDirectory, packagePrefix + "/" + fileInDirectory.getFileName(), remainingDepth - 1);
-                    } else if (Files.isRegularFile(fileInDirectory) && pathMatcher.matches(fileInDirectory)) {
+                    for (Path fileInDirectory : filesInDirectory) {
+                        if (Files.isDirectory(fileInDirectory)) {
+                            this.appendSourcePackages(targetFilesByPackageName, rootDirectory, fileInDirectory, packagePrefix + "/" + fileInDirectory.getFileName(), remainingDepth - 1);
+                        } else if (Files.isRegularFile(fileInDirectory) && pathMatcher.matches(fileInDirectory)) {
+                            targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
+                        }
+                    }
+
+                } else {
+
+                    // All the children can be appended directory by their path, we don't have to perform
+                    // any sub package creation at all
+                    List<Path> filteredFilesInDirectoryRecursively = Files
+                        .walk(parentDirectory, FileVisitOption.FOLLOW_LINKS)
+                        .filter(path -> !Objects.equals(parentDirectory, path))
+                        .filter(path -> Files.isRegularFile(path))
+                        .filter(path -> pathMatcher.matches(rootDirectory.relativize(path)))
+                        .sorted()
+                        .toList();
+
+                    for (Path fileInDirectory : filteredFilesInDirectoryRecursively) {
                         targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
                     }
+
                 }
 
-            } else {
-
-                // All the children can be appended directory by their path, we don't have to perform
-                // any sub package creation at all
-                List<Path> filteredFilesInDirectoryRecursively = Files
-                    .walk(parentDirectory, FileVisitOption.FOLLOW_LINKS)
-                    .filter(path -> !Objects.equals(parentDirectory, path))
-                    .filter(path -> Files.isRegularFile(path))
-                    .filter(path -> pathMatcher.matches(rootDirectory.relativize(path)))
-                    .sorted()
-                    .toList();
-
-                for (Path fileInDirectory : filteredFilesInDirectoryRecursively) {
-                    targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
-                }
-
+            } catch (IOException e) {
+                throw new RuntimeException("Cannot append source packages", e);
             }
-
         }
     }
 

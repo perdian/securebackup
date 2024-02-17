@@ -57,6 +57,8 @@ public class CollectorSettingsPane extends GridPane {
         GridPane.setHgrow(passwordConfirmationField, Priority.ALWAYS);
         passwordConfirmationLabel.setLabelFor(passwordConfirmationField);
 
+collectorSettings.passwordConfirmationProperty().setValue(collectorSettings.passwordProperty().getValue());
+
         this.add(targetDirectoryLabel, 0, 0, 1, 1);
         this.add(targetDirectorySelectPane, 1, 0, 1, 1);
         this.add(encryptorTypeLabel, 0, 1, 1, 1);
