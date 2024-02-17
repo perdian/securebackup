@@ -32,12 +32,14 @@ public class CollectorLogPane extends GridPane {
         collectorProperty.addListener((o, oldCollector, newCollector) -> {
 
             newCollector.addProgressListener((progressMessage, progressException) -> {
-                if (StringUtils.isNotEmpty(progressMessage)) {
-                    logArea.appendText(DATE_TIME_FORMATTER.format(ZonedDateTime.now()) + " | " + progressMessage + "\n");
-                }
-                if (progressException != null) {
-                    logArea.appendText(ExceptionUtils.getStackTrace(progressException) + "\n");
-                }
+                Platform.runLater(() -> {
+                    if (StringUtils.isNotEmpty(progressMessage)) {
+                        logArea.appendText(DATE_TIME_FORMATTER.format(ZonedDateTime.now()) + " | " + progressMessage + "\n");
+                    }
+                    if (progressException != null) {
+                        logArea.appendText(ExceptionUtils.getStackTrace(progressException) + "\n");
+                    }
+                });
             });
 
             CollectorPane collectorPane = new CollectorPane(newCollector);
