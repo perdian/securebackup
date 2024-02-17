@@ -16,7 +16,7 @@ import java.util.List;
 
 class CollectorActionEventHandler implements EventHandler<ActionEvent> {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmmss");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd-HHmm");
 
     private SourceCollection sourcesCollection = null;
     private CollectorSettings collectorSettings = null;
