@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.support.fx.actions;
+package de.perdian.apps.securebackup.support.fx.handlers;
 
 import javafx.beans.property.Property;
 import javafx.event.ActionEvent;
@@ -12,11 +12,11 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class SelectDirectoryIntoPropertyActionEventHandler implements EventHandler<ActionEvent> {
+public class SelectDirectoryActionEventHandler implements EventHandler<ActionEvent> {
 
     private Property<Path> targetProperty = null;
 
-    public SelectDirectoryIntoPropertyActionEventHandler(Property<Path> targetProperty) {
+    public SelectDirectoryActionEventHandler(Property<Path> targetProperty) {
         this.setTargetProperty(targetProperty);
     }
 

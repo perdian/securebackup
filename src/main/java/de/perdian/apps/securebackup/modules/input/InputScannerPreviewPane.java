@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.modules.sources;
+package de.perdian.apps.securebackup.modules.input;
 
 import de.perdian.apps.securebackup.support.fx.components.ComponentFactory;
 import javafx.application.Platform;
@@ -21,15 +21,15 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 
-class SourcePackagePreviewPane extends GridPane {
+class InputScannerPreviewPane extends GridPane {
 
-    private static final Logger log = LoggerFactory.getLogger(SourcePackagePreviewPane.class);
+    private static final Logger log = LoggerFactory.getLogger(InputScannerPreviewPane.class);
 
     private boolean keepReloading = false;
     private boolean reloadActive = false;
     private BorderPane contentPane = null;
 
-    SourcePackagePreviewPane(SourcePackage sourcePackage) {
+    InputScannerPreviewPane(InputScanner inputScanner) {
 
         BorderPane contentPane = new BorderPane();
         GridPane.setVgrow(contentPane, Priority.ALWAYS);
@@ -40,48 +40,48 @@ class SourcePackagePreviewPane extends GridPane {
         this.add(ComponentFactory.createSmallLabel("Preview"), 0, 0, 1, 1);
         this.add(contentPane, 0, 1, 1, 1);
 
-        this.reloadPreview(sourcePackage);
-        sourcePackage.addChangeListener((o, oldValue, newValue) -> this.reloadPreview(sourcePackage));
+        this.reloadPreview(inputScanner);
+        inputScanner.addChangeListener((o, oldValue, newValue) -> this.reloadPreview(inputScanner));
 
     }
 
-    private void reloadPreview(SourcePackage sourcePackage) {
+    private void reloadPreview(InputScanner inputScanner) {
         synchronized(this) {
             this.setKeepReloading(true);
             if (!this.isReloadActive()) {
                 this.setReloadActive(true);
                 Thread.ofVirtual().start(() -> {
                     while (true) {
-                        synchronized(SourcePackagePreviewPane.this) {
-                            if (!SourcePackagePreviewPane.this.isKeepReloading()) {
-                                SourcePackagePreviewPane.this.setReloadActive(false);
+                        synchronized(InputScannerPreviewPane.this) {
+                            if (!InputScannerPreviewPane.this.isKeepReloading()) {
+                                InputScannerPreviewPane.this.setReloadActive(false);
                                 break;
                             } else {
-                                SourcePackagePreviewPane.this.setKeepReloading(false);
+                                InputScannerPreviewPane.this.setKeepReloading(false);
                             }
                         }
-                        this.reloadPreviewOffloaded(sourcePackage);
+                        this.reloadPreviewOffloaded(inputScanner);
                     }
                 });
             }
         }
     }
 
-    private void reloadPreviewOffloaded(SourcePackage sourcePackage) {
+    private void reloadPreviewOffloaded(InputScanner inputScanner) {
 
-        log.debug("Reloading preview for package: {}", sourcePackage);
+        log.debug("Reloading preview for package: {}", inputScanner);
         this.updateContentPaneWithMessage("Reloading package preview...", MaterialDesignR.RELOAD);
 
         try {
 
             TreeItem<String> treeRootItem = new TreeItem<>();
-            List<SourceFileCollection> sourceFileCollections = sourcePackage.createSourceFileCollections();
-            for (SourceFileCollection sourceFileCollection : sourceFileCollections) {
-                List<String> sourceFileCollectionPath = List.of(sourceFileCollection.getName().split("/"));
-                CollectionTreeItem sourceFileCollectionItem = this.appendSourceFileCollectionItem(sourceFileCollectionPath, treeRootItem);
-                for (SourceFile sourceFile : sourceFileCollection.getFiles()) {
-                    List<String> sourceFilePath = List.of(sourceFile.getRelativeFileName().split("/"));
-                    this.appendSourceFileItem(sourceFilePath, sourceFileCollectionItem);
+            List<InputPackage> inputPackages = inputScanner.createInputPackages();
+            for (InputPackage inputPackage : inputPackages) {
+                List<String> inputPackagePath = List.of(inputPackage.getName().split("/"));
+                CollectionTreeItem inputPackageItem = this.appendInputPackageItem(inputPackagePath, treeRootItem);
+                for (InputPackageFile inputPackageFile : inputPackage.getFiles()) {
+                    List<String> sourceFilePath = List.of(inputPackageFile.getRelativeFileName().split("/"));
+                    this.appendSourceFileItem(sourceFilePath, inputPackageItem);
                 }
             }
 
@@ -96,7 +96,7 @@ class SourcePackagePreviewPane extends GridPane {
 
     }
 
-    private CollectionTreeItem appendSourceFileCollectionItem(List<String> collectionNamePath, TreeItem<String> parentItem) {
+    private CollectionTreeItem appendInputPackageItem(List<String> collectionNamePath, TreeItem<String> parentItem) {
 
         CollectionTreeItem collectionNameItem = parentItem.getChildren()
             .stream()
@@ -115,7 +115,7 @@ class SourcePackagePreviewPane extends GridPane {
         }
 
         if (collectionNamePath.size() > 1) {
-            return this.appendSourceFileCollectionItem(collectionNamePath.subList(1, collectionNamePath.size()), collectionNameItem);
+            return this.appendInputPackageItem(collectionNamePath.subList(1, collectionNamePath.size()), collectionNameItem);
         } else {
             return collectionNameItem;
         }
@@ -166,7 +166,7 @@ class SourcePackagePreviewPane extends GridPane {
         Platform.runLater(() -> this.getContentPane().setCenter(newContent));
     }
 
-    private TreeItem<Object> lookupSourceFileCollectionParentItem(String name, TreeItem<Object> parentItem) {
+    private TreeItem<Object> lookupInputPackageParentItem(String name, TreeItem<Object> parentItem) {
         return parentItem;
     }
 

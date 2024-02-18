@@ -1,7 +1,7 @@
 package de.perdian.apps.securebackup.modules.encryptor;
 
-import de.perdian.apps.securebackup.modules.encryptor.impl.NoEncryptor;
 import de.perdian.apps.securebackup.modules.encryptor.impl.OpenSslEncryptor;
+import de.perdian.apps.securebackup.modules.encryptor.impl.NoEncryptor;
 
 import java.util.function.Supplier;
 

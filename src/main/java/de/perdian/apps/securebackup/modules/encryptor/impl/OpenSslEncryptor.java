@@ -96,6 +96,15 @@ public class OpenSslEncryptor implements Encryptor {
         return baseFileName + ".encrypted.openssl";
     }
 
+    @Override
+    public String createReadme() {
+        return
+            """
+            Decryption via:
+            $ openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:PASSWORD -out FILENAME -in FILENAME
+            """;
+    }
+
     public String getKeyAlgorithm() {
         return this.keyAlgorithm;
     }

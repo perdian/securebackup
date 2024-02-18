@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.support.fx.converters;
+package de.perdian.apps.securebackup.support.fx.properties.converters;
 
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;

@@ -1,4 +1,4 @@
-package de.perdian.apps.securebackup.modules.sources;
+package de.perdian.apps.securebackup.modules.input;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -16,7 +16,7 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class SourcePackage {
+public class InputScanner {
 
     private final List<String> GLOBAL_EXCLUDES = List.of(".DS_Store");
 
@@ -25,13 +25,9 @@ public class SourcePackage {
     private final ObjectProperty<Integer> separatePackageDepth = new SimpleObjectProperty<>(2);
     private final ObservableList<String> includePatterns = FXCollections.observableArrayList();
     private final ObservableList<String> excludePatterns = FXCollections.observableArrayList();
-    private final List<ChangeListener<SourcePackage>> changeListeners = new CopyOnWriteArrayList<>();
+    private final List<ChangeListener<InputScanner>> changeListeners = new CopyOnWriteArrayList<>();
 
-    public SourcePackage() {
-        this(null);
-    }
-
-    public SourcePackage(Path rootDirectory) {
+    public InputScanner(Path rootDirectory) {
         this.rootDirectoryProperty().setValue(rootDirectory);
         this.rootNameProperty().setValue(rootDirectory == null ? null : rootDirectory.getFileName().toString());
         this.rootDirectoryProperty().addListener((o, oldValue, newValue) -> {
@@ -53,18 +49,18 @@ public class SourcePackage {
         return toStringBuilder.toString();
     }
 
-    public List<SourceFileCollection> createSourceFileCollections() {
+    public List<InputPackage> createInputPackages() {
 
-        Map<String, List<SourceFile>> filesByPackageName = new TreeMap<>();
-        this.appendSourcePackages(filesByPackageName, this.rootDirectoryProperty().getValue(), this.rootDirectoryProperty().getValue(), this.rootNameProperty().getValue(), this.separatePackageDepthProperty().getValue() == null ? 1 : this.separatePackageDepthProperty().getValue());
+        Map<String, List<InputPackageFile>> filesByInputPackageName = new TreeMap<>();
+        this.appendSourcePackages(filesByInputPackageName, this.rootDirectoryProperty().getValue(), this.rootDirectoryProperty().getValue(), this.rootNameProperty().getValue(), this.separatePackageDepthProperty().getValue() == null ? 1 : this.separatePackageDepthProperty().getValue());
 
-        return filesByPackageName.entrySet().stream()
-            .map(filesByRootEntry -> new SourceFileCollection(filesByRootEntry.getKey(), filesByRootEntry.getValue()))
+        return filesByInputPackageName.entrySet().stream()
+            .map(filesByRootEntry -> new InputPackage(filesByRootEntry.getKey(), filesByRootEntry.getValue()))
             .toList();
 
     }
 
-    private void appendSourcePackages(Map<String, List<SourceFile>> targetFilesByPackageName, Path rootDirectory, Path parentDirectory, String packagePrefix, int remainingDepth) {
+    private void appendSourcePackages(Map<String, List<InputPackageFile>> targetFilesByPackageName, Path rootDirectory, Path parentDirectory, String packagePrefix, int remainingDepth) {
         if (parentDirectory != null) {
             try {
 
@@ -85,7 +81,7 @@ public class SourcePackage {
                         if (Files.isDirectory(fileInDirectory)) {
                             this.appendSourcePackages(targetFilesByPackageName, rootDirectory, fileInDirectory, packagePrefix + "/" + fileInDirectory.getFileName(), remainingDepth - 1);
                         } else if (Files.isRegularFile(fileInDirectory) && pathMatcher.matches(fileInDirectory)) {
-                            targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
+                            targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new InputPackageFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
                         }
                     }
 
@@ -102,7 +98,7 @@ public class SourcePackage {
                         .toList();
 
                     for (Path fileInDirectory : filteredFilesInDirectoryRecursively) {
-                        targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new SourceFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
+                        targetFilesByPackageName.compute(packagePrefix, (k, v) -> v == null ? new ArrayList<>() : v).add(new InputPackageFile(fileInDirectory, parentDirectory.relativize(fileInDirectory).toString()));
                     }
 
                 }
@@ -122,7 +118,7 @@ public class SourcePackage {
         return file -> sourceIncludeMatcher.matches(file)
             && !sourceExcludeMatcher.matches(file)
             && !globalExcludeMatcher.matches(file)
-        ;
+            ;
 
     }
 
@@ -162,13 +158,13 @@ public class SourcePackage {
             changeListener.changed(null, this, this);
         });
     }
-    public void addChangeListener(ChangeListener<SourcePackage> changeListener) {
+    public void addChangeListener(ChangeListener<InputScanner> changeListener) {
         this.getChangeListeners().add(changeListener);
     }
-    public boolean removeChangeListener(ChangeListener<SourcePackage> changeListener) {
+    public boolean removeChangeListener(ChangeListener<InputScanner> changeListener) {
         return this.getChangeListeners().remove(changeListener);
     }
-    private List<ChangeListener<SourcePackage>> getChangeListeners() {
+    private List<ChangeListener<InputScanner>> getChangeListeners() {
         return this.changeListeners;
     }
 

@@ -1,6 +1,7 @@
-package de.perdian.securebackup.examples;
+package de.perdian.apps.securebackup.examples;
 
 import de.perdian.apps.securebackup.modules.encryptor.impl.OpenSslEncryptor;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
@@ -40,9 +41,9 @@ public class EncryptionExample {
         byte[] reloadedBytes = reloadedBytesOutputStream.toByteArray();
 
         System.out.println(""
-            + "\n- original  [" + cleartextBytesOriginal.length + "] = " // + Hex.encodeHexString(cleartextBytesOriginal)
-            + "\n- encrypted [" + encryptedBytes.length         + "] = " //+ Hex.encodeHexString(encryptedBytes)
-            + "\n- reloaded  [" + reloadedBytes.length          + "] = " //+ Hex.encodeHexString(reloadedBytes)
+            + "\n- original  [" + cleartextBytesOriginal.length + "] = " + Hex.encodeHexString(cleartextBytesOriginal)
+            + "\n- encrypted [" + encryptedBytes.length         + "] = " + Hex.encodeHexString(encryptedBytes)
+            + "\n- reloaded  [" + reloadedBytes.length          + "] = " + Hex.encodeHexString(reloadedBytes)
         );
 
         if (!Arrays.equals(cleartextBytesOriginal, reloadedBytes)) {

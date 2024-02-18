@@ -1,30 +1,33 @@
-package de.perdian.apps.securebackup.modules.preferences;
+package de.perdian.apps.securebackup;
 
-import de.perdian.apps.securebackup.support.fx.converters.PathStringConverter;
+import de.perdian.apps.securebackup.support.fx.properties.converters.PathStringConverter;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableMap;
 import javafx.util.StringConverter;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pt.davidafsilva.apple.OSXKeychain;
+import pt.davidafsilva.apple.OSXKeychainException;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
-public class Preferences {
+public class SecureBackupPreferences {
 
-    private static final Logger log = LoggerFactory.getLogger(Preferences.class);
+    private static final Logger log = LoggerFactory.getLogger(SecureBackupPreferences.class);
 
-    private PreferencesStorageDelegate storageDelegate = null;
-    private ObservableMap<String, StringProperty> properties = null;
+    private StorageDelegate storageDelegate = null;
+    private Map<String, StringProperty> properties = null;
 
-    public Preferences(PreferencesStorageDelegate storageDelegate) {
-        this.setStorageDelegate(storageDelegate);
-        this.setProperties(FXCollections.observableHashMap());
+    public SecureBackupPreferences() {
+        this.setStorageDelegate(StorageDelegate.createInstance());
+        this.setProperties(new HashMap<>());
     }
 
     public synchronized StringProperty resolveStringProperty(String propertyName) {
@@ -107,18 +110,77 @@ public class Preferences {
         }
     }
 
-    public PreferencesStorageDelegate getStorageDelegate() {
+    public StorageDelegate getStorageDelegate() {
         return this.storageDelegate;
     }
-    public void setStorageDelegate(PreferencesStorageDelegate storageDelegate) {
+    public void setStorageDelegate(StorageDelegate storageDelegate) {
         this.storageDelegate = storageDelegate;
     }
 
-    private ObservableMap<String, StringProperty> getProperties() {
+    private Map<String, StringProperty> getProperties() {
         return this.properties;
     }
-    private void setProperties(ObservableMap<String, StringProperty> properties) {
+    private void setProperties(Map<String, StringProperty> properties) {
         this.properties = properties;
+    }
+
+    private interface StorageDelegate {
+
+        static StorageDelegate createInstance() {
+            return new KeychainStorageDelegate();
+        }
+
+        String loadProperty(String propertyName) throws Exception;
+
+        void writeProperty(String propertyName, String propertyValue) throws Exception;
+
+    }
+
+    private static class KeychainStorageDelegate implements StorageDelegate {
+
+        private String applicationName = null;
+        private OSXKeychain keychain = null;
+
+        private KeychainStorageDelegate() {
+            try {
+                this.setApplicationName(SecureBackupPreferences.class.getPackageName());
+                this.setKeychain(OSXKeychain.getInstance());
+            } catch (OSXKeychainException e) {
+                throw new RuntimeException("Cannot access macOS keychain", e);
+            }
+        }
+
+        @Override
+        public String loadProperty(String propertyName) throws Exception {
+            return this.getKeychain().findGenericPassword(this.getApplicationName(), propertyName).orElse(null);
+        }
+
+        @Override
+        public void writeProperty(String propertyName, String newPropertyValue) throws Exception {
+            Optional<String> existingPasswordValue = this.getKeychain().findGenericPassword(this.getApplicationName(), propertyName);
+            if (StringUtils.isEmpty(newPropertyValue) && existingPasswordValue.isPresent()) {
+                this.getKeychain().deleteGenericPassword(this.getApplicationName(), propertyName);
+            } else if (StringUtils.isNotEmpty(newPropertyValue) && existingPasswordValue.isEmpty()) {
+                this.getKeychain().addGenericPassword(this.getApplicationName(), propertyName, newPropertyValue);
+            } else if (StringUtils.isNotEmpty(newPropertyValue) && existingPasswordValue.isPresent() && !Objects.equals(existingPasswordValue.get(), newPropertyValue)) {
+                this.getKeychain().modifyGenericPassword(this.getApplicationName(), propertyName, newPropertyValue);
+            }
+        }
+
+        public String getApplicationName() {
+            return this.applicationName;
+        }
+        public void setApplicationName(String applicationName) {
+            this.applicationName = applicationName;
+        }
+
+        private OSXKeychain getKeychain() {
+            return this.keychain;
+        }
+        private void setKeychain(OSXKeychain keychain) {
+            this.keychain = keychain;
+        }
+
     }
 
 }

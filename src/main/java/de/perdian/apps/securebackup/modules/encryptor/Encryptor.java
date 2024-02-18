@@ -12,4 +12,8 @@ public interface Encryptor {
 
     String createEncryptedFileName(String baseFileName);
 
+    default String createReadme() {
+        return null;
+    }
+
 }
