@@ -46,7 +46,7 @@ public class CollectorJob {
         this.status = new SimpleObjectProperty<>(CollectorJobStatus.NEW);
     }
 
-    synchronized void run() {
+    void run() {
         if (!CollectorJobStatus.NEW.equals(this.getStatus())) {
             throw new IllegalStateException("CollectorJob has already been started");
         } else {
@@ -229,6 +229,16 @@ public class CollectorJob {
         this.packageFileProgress = packageFileProgress;
     }
 
+    public void cancel() {
+        this.getPackageProgress().fireProgress(null, "Cancelling execution", null);
+        Platform.runLater(() -> {
+            if (CollectorJobStatus.NEW.equals(this.getStatus()) || CollectorJobStatus.RUNNING.equals(this.getStatus())) {
+                this.status.setValue(CollectorJobStatus.CANCELLED);
+            } else {
+                throw new IllegalStateException("Cannot cancel job in status: " + this.getStatus());
+            }
+        });
+    }
     public boolean isCancelled() {
         return CollectorJobStatus.CANCELLED.equals(this.getStatus());
     }

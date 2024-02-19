@@ -3,7 +3,6 @@ package de.perdian.apps.securebackup.modules.collector;
 import de.perdian.apps.securebackup.support.fx.components.ComponentFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -17,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.materialdesign2.MaterialDesignC;
+import org.kordamp.ikonli.materialdesign2.MaterialDesignS;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -55,7 +55,7 @@ public class CollectorJobNodeFactory {
 
     private static Region createCollectorJobNode(CollectorJob collectorJob) {
 
-        Region statusNode = CollectorJobNodeFactory.createCollectorJobStatusNode(collectorJob.statusProperty());
+        Region statusNode = CollectorJobNodeFactory.createCollectorJobStatusNode(collectorJob);
         GridPane.setHgrow(statusNode, Priority.ALWAYS);
 
         Region packagesProgressNode = CollectorJobNodeFactory.createCollectorJobProgressNode("Packages", collectorJob.getPackageProgress());
@@ -79,7 +79,7 @@ public class CollectorJobNodeFactory {
 
     }
 
-    private static <T> Region createCollectorJobStatusNode(ReadOnlyObjectProperty<CollectorJobStatus> statusProperty) {
+    private static <T> Region createCollectorJobStatusNode(CollectorJob collectorJob) {
 
         Label statusTitleLabel = ComponentFactory.createSmallLabel("Status");
         Label statusValueLabel = new Label("...");
@@ -88,6 +88,12 @@ public class CollectorJobNodeFactory {
         statusValueLabel.setAlignment(Pos.CENTER);
         statusValueLabel.setMaxWidth(Double.MAX_VALUE);
         GridPane.setHgrow(statusValueLabel, Priority.ALWAYS);
+
+        Button cancellationButton = new Button("Cancel", new FontIcon(MaterialDesignS.STOP_CIRCLE));
+        cancellationButton.disableProperty().bind(Bindings.not(collectorJob.statusProperty().isEqualTo(CollectorJobStatus.NEW).or(collectorJob.statusProperty().isEqualTo(CollectorJobStatus.RUNNING))));
+        cancellationButton.setOnAction(action -> collectorJob.cancel());
+        cancellationButton.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(cancellationButton, Priority.ALWAYS);
 
         ChangeListener<CollectorJobStatus> statusChangeListener = (o, oldValue, newValue) -> {
             StringBuilder statusValueStyle = new StringBuilder("-fx-border-color: lightgray;");
@@ -99,12 +105,14 @@ public class CollectorJobNodeFactory {
                 statusValueLabel.setStyle(statusValueStyle.toString());
             });
         };
-        statusChangeListener.changed(null, null, statusProperty.getValue());
-        statusProperty.addListener(statusChangeListener);
+        statusChangeListener.changed(null, null, collectorJob.statusProperty().getValue());
+        collectorJob.statusProperty().addListener(statusChangeListener);
 
         GridPane statusPane = new GridPane();
-        statusPane.add(statusTitleLabel, 0, 0, 1, 1);
+        statusPane.add(statusTitleLabel, 0, 0, 2, 1);
         statusPane.add(statusValueLabel, 0, 1, 1, 1);
+        statusPane.add(cancellationButton, 1, 1, 1, 1);
+        statusPane.setHgap(6);
         statusPane.setVgap(2);
         return statusPane;
 
